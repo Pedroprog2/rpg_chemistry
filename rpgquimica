@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ChemQuest RPG — Permanganometria de Sulfato Ferroso</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pixel-font: 'Press Start 2P', monospace;
+      --ui-font: 'Inter', sans-serif;
+    }
+
+    body {
+      font-family: var(--ui-font);
+      background-color: #0f172a;
+      color: #f8fafc;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    .font-pixel {
+      font-family: var(--pixel-font);
+    }
+
+    canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* Custom retro borders */
+    .retro-box {
+      background: #1e293b;
+      border: 4px solid #64748b;
+      box-shadow: 0 6px 0 #090d16, inset 0 0 0 2px #334155;
+      border-radius: 12px;
+    }
+
+    .retro-btn {
+      transition: transform 0.08s ease, filter 0.12s ease;
+      box-shadow: 0 4px 0 rgba(0, 0, 0, 0.55);
+    }
+    .retro-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+    }
+
+    /* Frações matemáticas limpas em CSS */
+    .math-frac {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      vertical-align: middle;
+      margin: 0 3px;
+      font-size: 0.85em;
+      line-height: 1.1;
+    }
+    .math-frac > span:first-child {
+      border-bottom: 1px solid currentColor;
+      padding: 0 4px 1px;
+    }
+    .math-frac > span:last-child {
+      padding: 1px 4px 0;
+    }
+
+    /* Scrollbar styling for modals */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- ==================== TELA 1: CRIAÇÃO DE PERSONAGEM ==================== -->
+  <section id="screen-intro" class="flex-1 flex items-center justify-center p-4">
+    <div class="retro-box max-w-3xl w-full p-6 md:p-8 space-y-6">
+      <div class="text-center space-y-3">
+        <div class="inline-block px-3 py-1 bg-purple-900/70 border border-purple-400 rounded-full text-xs font-pixel text-purple-200">
+          LABORATÓRIO DE QUÍMICA ANALÍTICA
+        </div>
+        <h1 class="font-pixel text-lg md:text-2xl text-amber-400 leading-relaxed">
+          CHEMQUEST: TITULAÇÃO REDOX
+        </h1>
+        <p class="text-sm md:text-base text-slate-300 max-w-2xl mx-auto">
+          Uma amostra farmacêutica de <strong>Sulfato Ferroso Heptaidratado (FeSO<sub>4</sub>&middot;7H<sub>2</sub>O)</strong>
+          chegou ao laboratório. Explore a bancada, colete os reagentes corretos, execute a
+          <strong>permanganometria em triplicata</strong> e emita o <strong>laudo estatístico oficial</strong>.
+        </p>
+      </div>
+
+      <!-- Identificação do Estudante -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-900/80 p-4 rounded-xl border border-slate-700">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+            Nome Completo do(a) Estudante
+          </label>
+          <input id="input-nome" type="text" placeholder="Ex.: Maria Clara Silva"
+            class="w-full px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-600 text-white focus:outline-none focus:border-amber-400" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+            Número de Matrícula (Semente da Amostra)
+          </label>
+          <input id="input-matricula" type="text" placeholder="Ex.: 2026014589"
+            class="w-full px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-600 text-white focus:outline-none focus:border-amber-400" />
+        </div>
+      </div>
+
+      <!-- Escolha de Classe / Avatar Pixel Art -->
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+          Escolha seu Personagem no Laboratório
+        </label>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="class-selector">
+          <!-- Pesquisador -->
+          <button type="button" data-class="pesquisador"
+            class="class-card retro-btn flex flex-col items-center p-4 rounded-xl bg-slate-800 border-2 border-amber-400 ring-2 ring-amber-400/40 text-center">
+            <canvas id="preview-pesquisador" width="64" height="64" class="w-16 h-16 mb-2"></canvas>
+            <span class="font-pixel text-xs text-amber-300 mb-1">Pesquisador</span>
+            <span class="text-xs text-slate-400">Jaleco branco &amp; óculos de proteção</span>
+          </button>
+
+          <!-- Pesquisadora -->
+          <button type="button" data-class="pesquisadora"
+            class="class-card retro-btn flex flex-col items-center p-4 rounded-xl bg-slate-800 border-2 border-slate-600 hover:border-slate-400 text-center">
+            <canvas id="preview-pesquisadora" width="64" height="64" class="w-16 h-16 mb-2"></canvas>
+            <span class="font-pixel text-xs text-emerald-300 mb-1">Pesquisadora</span>
+            <span class="text-xs text-slate-400">Jaleco branco &amp; precisão analítica</span>
+          </button>
+
+          <!-- Alquimista -->
+          <button type="button" data-class="alquimista"
+            class="class-card retro-btn flex flex-col items-center p-4 rounded-xl bg-slate-800 border-2 border-slate-600 hover:border-slate-400 text-center">
+            <canvas id="preview-alquimista" width="64" height="64" class="w-16 h-16 mb-2"></canvas>
+            <span class="font-pixel text-xs text-purple-300 mb-1">Alquimista</span>
+            <span class="text-xs text-slate-400">Manto arcano &amp; domínio redox</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="intro-error" class="hidden p-3 rounded-lg bg-red-950/80 border border-red-500 text-red-200 text-sm text-center"></div>
+
+      <button id="btn-start-game" type="button"
+        class="retro-btn w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-pixel text-xs md:text-sm tracking-wide">
+        ▶ ENTRAR NO LABORATÓRIO
+      </button>
+    </div>
+  </section>
+
+  <!-- ==================== TELA 2: MUNDO RPG DO LABORATÓRIO ==================== -->
+  <section id="screen-game" class="hidden flex-1 flex flex-col max-w-6xl w-full mx-auto p-3 md:p-4 gap-3">
+    <!-- HUD Superior -->
+    <header class="retro-box px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <canvas id="hud-avatar" width="32" height="32" class="w-9 h-9 bg-slate-900 rounded-lg border border-slate-600"></canvas>
+        <div>
+          <div id="hud-player-name" class="font-bold text-sm text-white">Estudante</div>
+          <div id="hud-player-meta" class="text-xs text-slate-400">Matrícula: ---</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4 text-xs md:text-sm">
+        <div class="bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
+          <span class="text-slate-400">Rigor Técnico:</span>
+          <strong id="hud-rigor" class="text-emerald-400 ml-1">100 pts</strong>
+        </div>
+        <div class="bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
+          <span class="text-slate-400">Replicatas:</span>
+          <strong id="hud-replicatas" class="text-amber-400 ml-1">0 / 3</strong>
+        </div>
+      </div>
+    </header>
+
+    <!-- Área Principal: Canvas + Painel Lateral de Missão e Inventário -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 items-start">
+      <!-- Mapa Canvas -->
+      <div class="lg:col-span-8 flex flex-col gap-3">
+        <div class="retro-box p-2 bg-slate-950 relative overflow-hidden">
+          <canvas id="lab-canvas" class="w-full rounded-lg block"></canvas>
+          <!-- Prompt flutuante de interação -->
+          <div id="interact-hint"
+            class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-slate-900/95 border-2 border-amber-400 px-4 py-2 rounded-full text-xs font-pixel text-amber-300 shadow-lg whitespace-nowrap">
+            [ESPAÇO / E] Inspecionar
+          </div>
+        </div>
+
+        <!-- Caixa de Diálogo Retrô -->
+        <div class="retro-box p-4 min-h-[104px] flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-1">
+            <span id="dialog-speaker" class="font-pixel text-[11px] text-amber-400">DIÁRIO DE BANCADA</span>
+            <span class="text-[11px] text-slate-400 hidden sm:inline">Use WASD / Setas para andar • Espaço ou E para interagir</span>
+          </div>
+          <p id="dialog-text" class="text-sm text-slate-200 leading-relaxed">
+            Bem-vindo(a) ao laboratório! Caminhe até as bancadas, consulte o quadro-negro e colete apenas os 3 itens necessários para titular o Sulfato Ferroso (FeSO<sub>4</sub>&middot;7H<sub>2</sub>O) por permanganometria.
+          </p>
+        </div>
+
+        <!-- Controles Virtuais Touch (Mobile / Tablet) -->
+        <div class="lg:hidden retro-box p-3 flex items-center justify-between gap-4">
+          <div class="grid grid-cols-3 gap-1.5 w-36 h-36">
+            <div></div>
+            <button type="button" data-dir="up" class="dpad-btn retro-btn bg-slate-700 rounded-lg font-bold text-lg flex items-center justify-center">▲</button>
+            <div></div>
+            <button type="button" data-dir="left" class="dpad-btn retro-btn bg-slate-700 rounded-lg font-bold text-lg flex items-center justify-center">◀</button>
+            <div class="bg-slate-800 rounded-lg"></div>
+            <button type="button" data-dir="right" class="dpad-btn retro-btn bg-slate-700 rounded-lg font-bold text-lg flex items-center justify-center">▶</button>
+            <div></div>
+            <button type="button" data-dir="down" class="dpad-btn retro-btn bg-slate-700 rounded-lg font-bold text-lg flex items-center justify-center">▼</button>
+            <div></div>
+          </div>
+          <button id="btn-mobile-action" type="button"
+            class="retro-btn flex-1 h-24 rounded-xl bg-amber-500 text-slate-950 font-pixel text-xs flex flex-col items-center justify-center gap-2">
+            <span>INTERAGIR</span>
+            <span class="text-[10px] font-sans font-bold opacity-80">(Bancada / Item)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Painel Lateral: Inventário & Progresso -->
+      <aside class="lg:col-span-4 space-y-4">
+        <!-- Inventário -->
+        <div class="retro-box p-4 space-y-3">
+          <h2 class="font-pixel text-xs text-cyan-300 border-b border-slate-700 pb-2">
+            🎒 KIT DE PERMANGANOMETRIA
+          </h2>
+          <ul class="space-y-2 text-xs">
+            <li id="inv-amostra" class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-between text-slate-400">
+              <span>1. Amostra FeSO<sub>4</sub>&middot;7H<sub>2</sub>O (3 alíquotas)</span>
+              <span class="font-bold">Pendente</span>
+            </li>
+            <li id="inv-kmno4" class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-between text-slate-400">
+              <span>2. Titulante KMnO<sub>4</sub> padronizado</span>
+              <span class="font-bold">Pendente</span>
+            </li>
+            <li id="inv-h2so4" class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-between text-slate-400">
+              <span>3. Meio ácido H<sub>2</sub>SO<sub>4</sub> 1 mol/L</span>
+              <span class="font-bold">Pendente</span>
+            </li>
+          </ul>
+          <p class="text-[11px] text-slate-400 leading-snug">
+            ⚠️ Cuidado com reagentes incompatíveis nas prateleiras! Escolher itens errados desconta pontos de rigor técnico.
+          </p>
+        </div>
+
+        <!-- Caderno de Anotações das Replicatas -->
+        <div class="retro-box p-4 space-y-3">
+          <h2 class="font-pixel text-xs text-amber-300 border-b border-slate-700 pb-2">
+            📋 DADOS DA TRIPLICATA
+          </h2>
+          <div class="text-xs text-slate-300 space-y-1">
+            <div>Conc. KMnO<sub>4</sub>: <strong id="side-conc" class="text-purple-300">Bloqueado</strong></div>
+            <div>MM (FeSO<sub>4</sub>&middot;7H<sub>2</sub>O): <strong>278,01 g/mol</strong></div>
+            <div>Estequiometria: <strong>5 Fe<sup>2+</sup> : 1 MnO<sub>4</sub><sup>&minus;</sup></strong></div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-700 text-slate-400">
+                  <th class="py-1.5">Rep.</th>
+                  <th class="py-1.5">Massa (g)</th>
+                  <th class="py-1.5">Vol. KMnO<sub>4</sub></th>
+                </tr>
+              </thead>
+              <tbody id="side-table-body" class="divide-y divide-slate-800 text-slate-300">
+                <tr>
+                  <td class="py-1.5 font-bold">R1</td>
+                  <td id="r1-m" class="py-1.5">---</td>
+                  <td id="r1-v" class="py-1.5 text-slate-500">Pendente</td>
+                </tr>
+                <tr>
+                  <td class="py-1.5 font-bold">R2</td>
+                  <td id="r2-m" class="py-1.5">---</td>
+                  <td id="r2-v" class="py-1.5 text-slate-500">Pendente</td>
+                </tr>
+                <tr>
+                  <td class="py-1.5 font-bold">R3</td>
+                  <td id="r3-m" class="py-1.5">---</td>
+                  <td id="r3-v" class="py-1.5 text-slate-500">Pendente</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button id="btn-open-titration" type="button"
+              class="retro-btn py-2 px-2 rounded-lg bg-purple-700 hover:bg-purple-600 text-white font-semibold text-xs disabled:opacity-40" disabled>
+              🧪 Bancada Titulação
+            </button>
+            <button id="btn-open-report" type="button"
+              class="retro-btn py-2 px-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-semibold text-xs disabled:opacity-40" disabled>
+              📊 Terminal Laudo
+            </button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ==================== MODAL 1: BANCADA DE TITULAÇÃO EM TRIPLICATA ==================== -->
+  <div id="modal-titration" class="hidden fixed inset-0 z-40 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 md:p-6 overflow-y-auto">
+    <div class="retro-box max-w-4xl w-full p-5 md:p-6 space-y-5 my-auto">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+        <div>
+          <span class="font-pixel text-[10px] text-purple-300">BANCADA EXPERIMENTAL</span>
+          <h2 class="font-pixel text-sm md:text-base text-amber-400 mt-1">TITULAÇÃO REDOX EM TRIPLICATA</h2>
+        </div>
+        <button id="btn-close-titration" type="button" class="retro-btn px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-bold">
+          ✕ Voltar ao Lab
+        </button>
+      </div>
+
+      <!-- Seletor de Replicata -->
+      <div class="grid grid-cols-3 gap-2">
+        <button type="button" data-rep="0" class="rep-tab retro-btn py-2.5 px-3 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs md:text-sm">
+          Replicata 1
+        </button>
+        <button type="button" data-rep="1" class="rep-tab retro-btn py-2.5 px-3 rounded-lg bg-slate-800 text-slate-300 border border-slate-600 font-bold text-xs md:text-sm">
+          Replicata 2
+        </button>
+        <button type="button" data-rep="2" class="rep-tab retro-btn py-2.5 px-3 rounded-lg bg-slate-800 text-slate-300 border border-slate-600 font-bold text-xs md:text-sm">
+          Replicata 3
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+        <!-- Animação Pixel Art da Bureta + Erlenmeyer -->
+        <div class="md:col-span-5 flex flex-col items-center bg-slate-900/90 p-4 rounded-xl border border-slate-700">
+          <canvas id="titration-canvas" width="220" height="280" class="w-48 h-60"></canvas>
+          <div id="titration-status-badge" class="mt-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-xs text-center text-slate-200 w-full">
+            Solução acidificada com H<sub>2</sub>SO<sub>4</sub> pronta para titular.
+          </div>
+        </div>
+
+        <!-- Controles da Bureta e Leituras -->
+        <div class="md:col-span-7 space-y-4">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-900 p-3.5 rounded-xl border border-slate-700">
+            <div>
+              <span class="block text-[11px] text-slate-400">Massa da Alíquota</span>
+              <strong id="tit-massa" class="text-base text-white">0.0000 g</strong>
+            </div>
+            <div>
+              <span class="block text-[11px] text-slate-400">[KMnO<sub>4</sub>]</span>
+              <strong id="tit-conc" class="text-base text-purple-300">0.0000 mol/L</strong>
+            </div>
+            <div class="col-span-2 sm:col-span-1">
+              <span class="block text-[11px] text-slate-400">Volume Escoado</span>
+              <strong id="tit-vol" class="text-lg text-amber-400">0.00 mL</strong>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <span class="block text-xs font-semibold text-slate-300">Controle da Torneira da Bureta:</span>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button type="button" data-add="1.00" class="btn-drip retro-btn py-3 rounded-lg bg-purple-700 hover:bg-purple-600 font-bold text-xs">
+                + 1,00 mL
+              </button>
+              <button type="button" data-add="0.10" class="btn-drip retro-btn py-3 rounded-lg bg-purple-700 hover:bg-purple-600 font-bold text-xs">
+                + 0,10 mL
+              </button>
+              <button type="button" data-add="0.02" class="btn-drip retro-btn py-3 rounded-lg bg-fuchsia-700 hover:bg-fuchsia-600 font-bold text-xs">
+                💧 + 0,02 mL
+              </button>
+              <button id="btn-reset-rep" type="button" class="retro-btn py-3 rounded-lg bg-slate-700 hover:bg-slate-600 font-bold text-xs">
+                🔄 Zerar Rep.
+              </button>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-900/70 border border-slate-700 text-xs text-slate-300 space-y-1">
+            <p><strong>Ponto Final (Autoindicação):</strong> O íon MnO<sub>4</sub><sup>&minus;</sup> é reduzido a Mn<sup>2+</sup> (praticamente incolor). A primeira gota em excesso confere coloração <strong>rosa-pálido persistente</strong> à solução.</p>
+          </div>
+
+          <button id="btn-record-rep" type="button"
+            class="retro-btn w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-pixel text-xs">
+            ✔ REGISTRAR VOLUME DESTA REPLICATA
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: TERMINAL DE LAUDO ESTATÍSTICO ==================== -->
+  <div id="modal-report" class="hidden fixed inset-0 z-40 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-3 md:p-6 overflow-y-auto">
+    <div class="retro-box max-w-4xl w-full p-5 md:p-7 space-y-5 my-auto max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+        <div>
+          <span class="font-pixel text-[10px] text-emerald-300">TERMINAL ANALÍTICO</span>
+          <h2 class="font-pixel text-sm md:text-base text-amber-400 mt-1">LAUDO TÉCNICO E ESTATÍSTICA</h2>
+        </div>
+        <button id="btn-close-report" type="button" class="retro-btn px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-bold">
+          ✕ Voltar ao Lab
+        </button>
+      </div>
+
+      <!-- Resumo dos Dados Obtidos na Bancada + Guia de Fórmulas Limpas -->
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
+        <div class="flex flex-wrap justify-between gap-2 text-xs text-slate-300">
+          <span><strong>Reação:</strong> MnO<sub>4</sub><sup>&minus;</sup> + 5 Fe<sup>2+</sup> + 8 H<sup>+</sup> &rarr; Mn<sup>2+</sup> + 5 Fe<sup>3+</sup> + 4 H<sub>2</sub>O</span>
+          <span><strong>MM(FeSO<sub>4</sub>&middot;7H<sub>2</sub>O):</strong> 278,01 g&middot;mol<sup>&minus;1</sup></span>
+          <span><strong>[KMnO<sub>4</sub>]:</strong> <span id="rep-summary-conc" class="text-purple-300 font-bold">---</span></span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div class="p-3 rounded-lg bg-slate-800 border border-slate-600">
+            <div class="font-bold text-amber-300 mb-1">Replicata 1 (R1)</div>
+            <div>Massa: <strong id="rep-m1">---</strong></div>
+            <div>Volume KMnO<sub>4</sub>: <strong id="rep-v1">---</strong></div>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-800 border border-slate-600">
+            <div class="font-bold text-amber-300 mb-1">Replicata 2 (R2)</div>
+            <div>Massa: <strong id="rep-m2">---</strong></div>
+            <div>Volume KMnO<sub>4</sub>: <strong id="rep-v2">---</strong></div>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-800 border border-slate-600">
+            <div class="font-bold text-amber-300 mb-1">Replicata 3 (R3)</div>
+            <div>Massa: <strong id="rep-m3">---</strong></div>
+            <div>Volume KMnO<sub>4</sub>: <strong id="rep-v3">---</strong></div>
+          </div>
+        </div>
+
+        <!-- Painel de Fórmulas Estatísticas em HTML/CSS limpo -->
+        <div class="p-3 rounded-lg bg-slate-950/80 border border-slate-700 text-xs text-slate-300 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <span class="text-slate-400 font-semibold">Teor (% m/m):</span>
+            <span class="ml-1">
+              % =
+              <span class="math-frac">
+                <span>5 &times; [KMnO<sub>4</sub>] &times; V<sub>L</sub> &times; 278,01</span>
+                <span>m<sub>amostra</sub></span>
+              </span>
+              &times; 100
+            </span>
+          </div>
+          <div>
+            <span class="text-slate-400 font-semibold">Desvio Padrão (<i>s</i>) e DPR:</span>
+            <span class="ml-1">
+              <i>s</i> = &radic;<span class="border-t border-slate-300 px-1">&Sigma;(<i>x</i><sub>i</sub> &minus; <i>x&#772;</i>)<sup>2</sup> / (<i>n</i> &minus; 1)</span>
+              &nbsp;|&nbsp; DPR = (<i>s</i> / <i>x&#772;</i>) &times; 100
+            </span>
+          </div>
+          <div class="md:col-span-2">
+            <span class="text-slate-400 font-semibold">Intervalo de Confiança (95%, <i>n</i> = 3, <i>gl</i> = 2):</span>
+            <span class="ml-1">
+              IC<sub>95%</sub> = <i>x&#772;</i> &plusmn;
+              <span class="math-frac">
+                <span><i>t</i><sub>crítico</sub> &times; <i>s</i></span>
+                <span>&radic;<i>n</i></span>
+              </span>
+              &nbsp;(onde <i>t</i><sub>crítico</sub> = <strong>4,303</strong> e &radic;3 &approx; 1,7321)
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulário de Cálculos do Estudante -->
+      <form id="form-laudo" class="space-y-4">
+        <div class="space-y-2">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-cyan-300">
+            1. Teores Individuais de FeSO<sub>4</sub>&middot;7H<sub>2</sub>O (% m/m)
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs text-slate-300 mb-1">Teor R1 (% m/m):</label>
+              <input id="calc-t1" type="number" step="0.01" min="0" max="120" required placeholder="0.00"
+                class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-300 mb-1">Teor R2 (% m/m):</label>
+              <input id="calc-t2" type="number" step="0.01" min="0" max="120" required placeholder="0.00"
+                class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-300 mb-1">Teor R3 (% m/m):</label>
+              <input id="calc-t3" type="number" step="0.01" min="0" max="120" required placeholder="0.00"
+                class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white text-sm" />
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-cyan-300">
+              2. Tratamento Estatístico (<i>n</i> = 3, <i>gl</i> = 2)
+            </h3>
+            <span class="text-[11px] text-amber-300 bg-amber-950/60 border border-amber-700 px-2.5 py-0.5 rounded">
+              Dado: <i>t</i><sub>crítico</sub> (95%, <i>gl</i> = 2) = <strong>4,303</strong>
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs text-slate-300 mb-1">Média <i>x&#772;</i> (% m/m):</label>
+              <input id="calc-media" type="number" step="0.01" min="0" max="120" required placeholder="0.00"
+                class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-300 mb-1">Desvio Padrão <i>s</i> (%):</label>
+              <input id="calc-dp" type="number" step="0.001" min="0" max="50" required placeholder="0.000"
+                class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-300 mb-1">DPR / CV (%):</label>
+              <input id="calc-dpr" type="number" step="0.01" min="0" max="100" required placeholder="0.00"
+                class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white text-sm" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div>
+              <label class="block text-xs text-slate-300 mb-1">Limite Inferior IC 95% (<i>x&#772;</i> &minus; margem) (%):</label>
+              <input id="calc-ic-inf" type="number" step="0.01" min="0" max="120" required placeholder="0.00"
+                class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-300 mb-1">Limite Superior IC 95% (<i>x&#772;</i> + margem) (%):</label>
+              <input id="calc-ic-sup" type="number" step="0.01" min="0" max="120" required placeholder="0.00"
+                class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white text-sm" />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-cyan-300 mb-1">
+            3. Parecer Técnico e Discussão
+          </label>
+          <textarea id="calc-parecer" rows="3" required
+            placeholder="Explique o papel do H2SO4 na permanganometria, a propriedade autoindicadora do KMnO4, e avalie a precisão (DPR) e o intervalo de confiança obtidos para o lote..."
+            class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white text-sm"></textarea>
+        </div>
+
+        <div id="report-feedback" class="hidden p-3 rounded-lg text-xs"></div>
+
+        <div class="flex flex-wrap gap-3 pt-1">
+          <button type="submit"
+            class="retro-btn flex-1 py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-pixel text-xs">
+            📜 EMITIR LAUDO &amp; CERTIFICADO
+          </button>
+        </div>
+      </form>
+
+      <!-- Área Pós-Emissão: Certificado Visual + Download CSV + Envio Forms -->
+      <div id="certificate-panel" class="hidden space-y-4 border-t-2 border-amber-400/50 pt-4">
+        <div id="certificate-card" class="p-5 rounded-xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-2 border-amber-400 space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+            <span class="font-pixel text-xs text-amber-400">LAUDO ANALÍTICO OFICIAL</span>
+            <span id="cert-date" class="text-xs text-slate-400"></span>
+          </div>
+          <div id="cert-body" class="text-xs md:text-sm text-slate-200 space-y-1.5"></div>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+          <button id="btn-download-csv" type="button"
+            class="retro-btn flex-1 py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
+            ⬇️ Baixar Comprovante Oficial (CSV)
+          </button>
+          <button id="btn-print-cert" type="button"
+            class="retro-btn py-3 px-4 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs">
+            🖨️ Imprimir / Salvar PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: QUADRO-NEGRO TEÓRICO DO LABORATÓRIO ==================== -->
+  <div id="modal-board" class="hidden fixed inset-0 z-40 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="retro-box max-w-2xl w-full p-6 space-y-4 bg-emerald-950/95 border-amber-700">
+      <div class="flex items-center justify-between border-b border-emerald-800 pb-3">
+        <div>
+          <span class="font-pixel text-[10px] text-amber-300">MURAL DO LABORATÓRIO</span>
+          <h2 class="font-pixel text-sm text-white mt-1">FUNDAMENTOS DA PERMANGANOMETRIA</h2>
+        </div>
+        <button id="btn-close-board" type="button" class="retro-btn px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold">
+          ✕ Fechar
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs md:text-sm text-emerald-50 leading-relaxed">
+        <div class="p-3.5 rounded-xl bg-slate-950/60 border border-emerald-700">
+          <div class="text-[11px] uppercase tracking-wider text-amber-300 font-bold mb-1">Equação Iônica Balanceada (Meio Ácido)</div>
+          <p class="font-mono text-sm md:text-base text-white">
+            MnO<sub>4</sub><sup>&minus;</sup>(aq) + 5 Fe<sup>2+</sup>(aq) + 8 H<sup>+</sup>(aq) &rarr; Mn<sup>2+</sup>(aq) + 5 Fe<sup>3+</sup>(aq) + 4 H<sub>2</sub>O(l)
+          </p>
+        </div>
+
+        <ul class="space-y-2 text-xs text-emerald-100">
+          <li><strong>1. Relação Estequiométrica:</strong> Cada <strong>1 mol de MnO<sub>4</sub><sup>&minus;</sup></strong> oxida exatamente <strong>5 mols de Fe<sup>2+</sup></strong>.</li>
+          <li><strong>2. Papel do H<sub>2</sub>SO<sub>4</sub>:</strong> Fornece os íons H<sup>+</sup> necessários para reduzir o manganês de +7 a +2 (incolor), evitando a formação de precipitado marrom de MnO<sub>2</sub>.</li>
+          <li><strong>3. Autoindicação:</strong> Não se utiliza indicador externo; o próprio excesso de 1 gota de KMnO<sub>4</sub> confere coloração rosa-pálido persistente.</li>
+          <li><strong>4. Interferência do HCl:</strong> O ácido clorídrico oxida-se paralelamente a Cl<sub>2</sub>(g) pelo permanganato, causando erro positivo no volume gasto.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // CONFIGURAÇÃO OPCIONAL DO GOOGLE FORMS (MESMA ESTRUTURA GRATUITA)
+    // =========================================================================
+    // Caso queira envio automático para sua planilha no Google Drive, preencha
+    // a URL pública terminada em /formResponse e os códigos entry abaixo:
+    const GOOGLE_FORMS_CONFIG = {
+      enabled: false, // mude para true após inserir sua URL e entries
+      formUrl: "https://docs.google.com/forms/d/e/SEU_ID_PUBLICO_AQUI/formResponse",
+      entryMatricula: "entry.111111111",
+      entryNome: "entry.222222222",
+      entryResumo: "entry.333333333",
+      entryParecer: "entry.444444444"
+    };
+
+    // =========================================================================
+    // CONSTANTES QUÍMICAS E GERADOR DETERMINÍSTICO POR MATRÍCULA
+    // =========================================================================
+    const MM_FESO4_7H2O = 278.01; // g/mol
+    const T_CRITICO_95_GL2 = 4.303;
+
+    function createSeededRNG(str) {
+      let h = 2166136261 >>> 0;
+      for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return function () {
+        h += 0x6D2B79F5;
+        let t = Math.imul(h ^ (h >>> 15), 1 | h);
+        t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function generateStudentSample(matricula) {
+      const cleanId = matricula.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const rng = createSeededRNG(cleanId);
+
+      // Teor real exclusivo (%) entre 78.00% e 96.50%
+      const teorReal = Number((78.0 + rng() * 18.5).toFixed(2));
+
+      // Concentração padronizada do KMnO4 (~0.0195 a 0.0215 mol/L)
+      const concKMnO4 = Number((0.0195 + rng() * 0.0020).toFixed(4));
+
+      // 3 massas de amostra para a triplicata (~0.4500 a 0.5500 g)
+      // Com pequeno ruído experimental realista de ponto final (-0.05 a +0.10 mL)
+      // para gerar um desvio padrão amostral realista entre as 3 replicatas.
+      const replicatas = [0, 1, 2].map((idx) => {
+        const massa = Number((0.4600 + rng() * 0.0850).toFixed(4));
+        const molsFe = (massa * (teorReal / 100)) / MM_FESO4_7H2O;
+        const molsMnO4 = molsFe / 5.0;
+        const volEq = (molsMnO4 / concKMnO4) * 1000.0;
+        // Ruído experimental por replicata (diferente em R1, R2 e R3)
+        const ruidoGota = (rng() - 0.35) * 0.14; // mL
+        const volPontoFinal = Number((volEq + ruidoGota).toFixed(2));
+        return {
+          id: idx + 1,
+          massa,
+          volEq,
+          volPontoFinal,
+          volAtual: 0.0,
+          volRegistrado: null
+        };
+      });
+
+      return {
+        cleanId,
+        teorReal,
+        concKMnO4,
+        replicatas
+      };
+    }
+
+    // =========================================================================
+    // RENDERIZADOR DE SPRITES PIXEL ART (PERSONAGENS)
+    // =========================================================================
+    function drawCharacterSprite(ctx, charClass, x, y, scale, frame = 0, dir = "down") {
+      ctx.save();
+      ctx.translate(Math.round(x), Math.round(y));
+      ctx.scale(scale, scale);
+
+      const bob = frame % 2 === 1 ? -1 : 0;
+
+      // Sombra no chão
+      ctx.fillStyle = "rgba(0,0,0,0.35)";
+      ctx.fillRect(3, 14, 10, 2);
+
+      if (charClass === "pesquisador") {
+        // Cabelo castanho
+        ctx.fillStyle = "#451a03";
+        ctx.fillRect(4, 1 + bob, 8, 3);
+        // Rosto
+        ctx.fillStyle = "#fed7aa";
+        ctx.fillRect(4, 3 + bob, 8, 5);
+        // Óculos de proteção
+        ctx.fillStyle = "#38bdf8";
+        ctx.fillRect(4, 4 + bob, 3, 2);
+        ctx.fillRect(9, 4 + bob, 3, 2);
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(7, 4 + bob, 2, 1);
+        // Jaleco branco
+        ctx.fillStyle = "#f8fafc";
+        ctx.fillRect(3, 8 + bob, 10, 5);
+        // Gravata azul
+        ctx.fillStyle = "#2563eb";
+        ctx.fillRect(7, 8 + bob, 2, 3);
+        // Calça / sapatos
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(4, 13, 3, 2 - (frame % 2));
+        ctx.fillRect(9, 13, 3, 2 - ((frame + 1) % 2));
+      } else if (charClass === "pesquisadora") {
+        // Coque + cabelo ruivo/castanho
+        ctx.fillStyle = "#7c2d12";
+        ctx.fillRect(6, 0 + bob, 4, 2);
+        ctx.fillRect(4, 2 + bob, 8, 2);
+        // Rosto
+        ctx.fillStyle = "#fed7aa";
+        ctx.fillRect(4, 4 + bob, 8, 4);
+        // Olhos
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(5, 5 + bob, 1, 1);
+        ctx.fillRect(10, 5 + bob, 1, 1);
+        // Jaleco branco acinturado
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(3, 8 + bob, 10, 5);
+        // Detalhe verde-esmeralda
+        ctx.fillStyle = "#10b981";
+        ctx.fillRect(7, 8 + bob, 2, 4);
+        // Calça / sapatos
+        ctx.fillStyle = "#334155";
+        ctx.fillRect(5, 13, 2, 2 - (frame % 2));
+        ctx.fillRect(9, 13, 2, 2 - ((frame + 1) % 2));
+      } else {
+        // Alquimista - Capuz roxo arcano
+        ctx.fillStyle = "#581c87";
+        ctx.fillRect(5, 0 + bob, 6, 2);
+        ctx.fillRect(3, 2 + bob, 10, 3);
+        // Sombra do rosto e olhos brilhantes
+        ctx.fillStyle = "#1e1b4b";
+        ctx.fillRect(4, 4 + bob, 8, 4);
+        ctx.fillStyle = "#facc15";
+        ctx.fillRect(5, 5 + bob, 2, 1);
+        ctx.fillRect(9, 5 + bob, 2, 1);
+        // Manto roxo e dourado
+        ctx.fillStyle = "#6b21a8";
+        ctx.fillRect(2, 8 + bob, 12, 6);
+        ctx.fillStyle = "#eab308";
+        ctx.fillRect(7, 8 + bob, 2, 6);
+        // Botas
+        ctx.fillStyle = "#090d16";
+        ctx.fillRect(4, 14, 3, 1);
+        ctx.fillRect(9, 14, 3, 1);
+      }
+
+      ctx.restore();
+    }
+
+    // Desenha previews na tela inicial
+    ["pesquisador", "pesquisadora", "alquimista"].forEach((cls) => {
+      const c = document.getElementById(`preview-${cls}`);
+      const ctx = c.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+      drawCharacterSprite(ctx, cls, 0, 0, 4, 0);
+    });
+
+    // =========================================================================
+    // ESTADO GLOBAL DO JOGO
+    // =========================================================================
+    const state = {
+      playerName: "",
+      matricula: "",
+      charClass: "pesquisador",
+      sample: null,
+      rigor: 100,
+      inventory: {
+        amostra: false,
+        kmno4: false,
+        h2so4: false
+      },
+      trapsTriggered: new Set(),
+      activeRepIndex: 0,
+      lastRecord: null,
+      player: {
+        x: 360,
+        y: 250,
+        w: 28,
+        h: 28,
+        speed: 170,
+        frame: 0,
+        animTimer: 0
+      },
+      keys: {}
+    };
+
+    // =========================================================================
+    // SELEÇÃO DE PERSONAGEM & INÍCIO
+    // =========================================================================
+    document.querySelectorAll(".class-card").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".class-card").forEach((c) => {
+          c.classList.remove("border-amber-400", "ring-2", "ring-amber-400/40");
+          c.classList.add("border-slate-600");
+        });
+        btn.classList.remove("border-slate-600");
+        btn.classList.add("border-amber-400", "ring-2", "ring-amber-400/40");
+        state.charClass = btn.dataset.class;
+      });
+    });
+
+    document.getElementById("btn-start-game").addEventListener("click", () => {
+      const nome = document.getElementById("input-nome").value.trim();
+      const mat = document.getElementById("input-matricula").value.trim();
+      const errBox = document.getElementById("intro-error");
+
+      if (nome.length < 3 || mat.length < 4) {
+        errBox.textContent = "Por favor, preencha seu Nome Completo e uma Matrícula válida (mínimo 4 caracteres).";
+        errBox.classList.remove("hidden");
+        return;
+      }
+
+      errBox.classList.add("hidden");
+      state.playerName = nome;
+      state.matricula = mat;
+      state.sample = generateStudentSample(mat);
+
+      // Atualiza HUD
+      document.getElementById("hud-player-name").textContent = nome;
+      document.getElementById("hud-player-meta").textContent =
+        `Matrícula: ${state.sample.cleanId} • Classe: ${state.charClass.toUpperCase()}`;
+
+      const hudCanvas = document.getElementById("hud-avatar");
+      const hudCtx = hudCanvas.getContext("2d");
+      hudCtx.imageSmoothingEnabled = false;
+      hudCtx.clearRect(0, 0, 32, 32);
+      drawCharacterSprite(hudCtx, state.charClass, 0, 0, 2, 0);
+
+      // Preenche massas na tabela lateral
+      state.sample.replicatas.forEach((r) => {
+        document.getElementById(`r${r.id}-m`).textContent = `${r.massa.toFixed(4)} g`;
+      });
+
+      document.getElementById("screen-intro").classList.add("hidden");
+      document.getElementById("screen-game").classList.remove("hidden");
+
+      resizeLabCanvas();
+      requestAnimationFrame(gameLoop);
+    });
+
+    // =========================================================================
+    // MAPA DO LABORATÓRIO TOP-DOWN (720 x 440 virtual coordinates)
+    // =========================================================================
+    const WORLD_W = 720;
+    const WORLD_H = 440;
+
+    // Estações interativas no laboratório
+    const stations = [
+      {
+        id: "balanca",
+        label: "Balança Analítica (Amostra FeSO₄·7H₂O)",
+        x: 52, y: 76, w: 92, h: 52,
+        color: "#38bdf8",
+        type: "item_amostra"
+      },
+      {
+        id: "prateleira_kmno4",
+        label: "Frasco Âmbar: KMnO₄ Padronizado",
+        x: 175, y: 76, w: 88, h: 52,
+        color: "#c084fc",
+        type: "item_kmno4"
+      },
+      {
+        id: "prateleira_h2so4",
+        label: "Capela: Ácido Sulfúrico (H₂SO₄ 1M)",
+        x: 295, y: 76, w: 88, h: 52,
+        color: "#facc15",
+        type: "item_h2so4"
+      },
+      {
+        id: "armadilha_naoh",
+        label: "Frasco: Hidróxido de Sódio (NaOH)",
+        x: 415, y: 76, w: 88, h: 52,
+        color: "#f87171",
+        type: "trap_naoh"
+      },
+      {
+        id: "quadro_teorico",
+        label: "Quadro-Negro: Reação Redox & Estequiometria",
+        x: 538, y: 76, w: 124, h: 52,
+        color: "#10b981",
+        type: "board_theory"
+      },
+      {
+        id: "armadilha_fenol",
+        label: "Frasco: Indicador Fenolftaleína",
+        x: 52, y: 210, w: 72, h: 80,
+        color: "#f472b6",
+        type: "trap_fenol"
+      },
+      {
+        id: "armadilha_hcl",
+        label: "Frasco: Ácido Clorídrico (HCl conc.)",
+        x: 596, y: 210, w: 72, h: 80,
+        color: "#fb923c",
+        type: "trap_hcl"
+      },
+      {
+        id: "bancada_titulacao",
+        label: "Bancada de Titulação (Bureta)",
+        x: 230, y: 318, w: 120, h: 64,
+        color: "#a855f7",
+        type: "station_titration"
+      },
+      {
+        id: "terminal_laudo",
+        label: "Terminal de Laudo & Estatística",
+        x: 410, y: 318, w: 120, h: 64,
+        color: "#10b981",
+        type: "station_report"
+      }
+    ];
+
+    const labCanvas = document.getElementById("lab-canvas");
+    const labCtx = labCanvas.getContext("2d");
+
+    function resizeLabCanvas() {
+      const containerWidth = labCanvas.parentElement.clientWidth - 16;
+      const ratio = WORLD_H / WORLD_W;
+      labCanvas.width = WORLD_W;
+      labCanvas.height = WORLD_H;
+      labCanvas.style.width = `${containerWidth}px`;
+      labCanvas.style.height = `${Math.round(containerWidth * ratio)}px`;
+      labCtx.imageSmoothingEnabled = false;
+    }
+
+    window.addEventListener("resize", () => {
+      if (!document.getElementById("screen-game").classList.contains("hidden")) {
+        resizeLabCanvas();
+      }
+    });
+
+    function setDialog(speaker, text, tone = "normal") {
+      const spEl = document.getElementById("dialog-speaker");
+      const txEl = document.getElementById("dialog-text");
+      spEl.textContent = speaker;
+      txEl.textContent = text;
+      spEl.className = "font-pixel text-[11px] " + (
+        tone === "error" ? "text-red-400" :
+        tone === "success" ? "text-emerald-400" : "text-amber-400"
+      );
+    }
+
+    function updateRigor(delta) {
+      state.rigor = Math.max(0, state.rigor + delta);
+      const el = document.getElementById("hud-rigor");
+      el.textContent = `${state.rigor} pts`;
+      el.className = "ml-1 font-bold " + (
+        state.rigor >= 80 ? "text-emerald-400" :
+        state.rigor >= 50 ? "text-amber-400" : "text-red-400"
+      );
+    }
+
+    function markInventoryCollected(key, badgeText) {
+      state.inventory[key] = true;
+      const li = document.getElementById(`inv-${key}`);
+      li.classList.remove("border-slate-700", "text-slate-400");
+      li.classList.add("border-emerald-500", "bg-emerald-950/40", "text-emerald-200");
+      li.querySelector("span:last-child").textContent = badgeText;
+
+      if (state.inventory.amostra && state.inventory.kmno4 && state.inventory.h2so4) {
+        document.getElementById("btn-open-titration").disabled = false;
+      }
+    }
+
+    function getNearbyStation() {
+      const px = state.player.x + state.player.w / 2;
+      const py = state.player.y + state.player.h / 2;
+      for (const st of stations) {
+        const cx = st.x + st.w / 2;
+        const cy = st.y + st.h / 2;
+        const dx = Math.abs(px - cx);
+        const dy = Math.abs(py - cy);
+        if (dx < st.w / 2 + 28 && dy < st.h / 2 + 28) {
+          return st;
+        }
+      }
+      return null;
+    }
+
+    function handleInteract() {
+      const st = getNearbyStation();
+      if (!st) return;
+
+      if (st.type === "item_amostra") {
+        if (!state.inventory.amostra) {
+          markInventoryCollected("amostra", "Coletado ✔");
+          const r = state.sample.replicatas;
+          setDialog(
+            "BALANÇA ANALÍTICA",
+            `Você coletou as 3 alíquotas pesadas de Sulfato Ferroso Heptaidratado: R1 = ${r[0].massa.toFixed(4)} g, R2 = ${r[1].massa.toFixed(4)} g e R3 = ${r[2].massa.toFixed(4)} g.`,
+            "success"
+          );
+        } else {
+          setDialog("BALANÇA ANALÍTICA", "As 3 alíquotas de FeSO4·7H2O já estão no seu kit.");
+        }
+      } else if (st.type === "item_kmno4") {
+        if (!state.inventory.kmno4) {
+          markInventoryCollected("kmno4", "Coletado ✔");
+          document.getElementById("side-conc").textContent = `${state.sample.concKMnO4.toFixed(4)} mol/L`;
+          setDialog(
+            "REAGENTE COLETADO",
+            `Permanganato de Potássio padronizado (${state.sample.concKMnO4.toFixed(4)} mol/L) coletado! Ele atua como titulante oxidante e autoindicador.`,
+            "success"
+          );
+        } else {
+          setDialog("PRATELEIRA", "Você já pegou o frasco âmbar de KMnO4 padronizado.");
+        }
+      } else if (st.type === "item_h2so4") {
+        if (!state.inventory.h2so4) {
+          markInventoryCollected("h2so4", "Coletado ✔");
+          setDialog(
+            "CAPELA DE ÁCIDOS",
+            "Ácido Sulfúrico diluído (H2SO4 1 mol/L) coletado! Essencial para fornecer os 8 H+ da semirreação e reduzir MnO4- a Mn2+ incolor.",
+            "success"
+          );
+        } else {
+          setDialog("CAPELA DE ÁCIDOS", "Você já coletou o H2SO4 diluído.");
+        }
+      } else if (st.type === "trap_naoh") {
+        if (!state.trapsTriggered.has("naoh")) {
+          state.trapsTriggered.add("naoh");
+          updateRigor(-15);
+        }
+        setDialog(
+          "ERRO QUÍMICO (-15 PTS DE RIGOR)",
+          "NaOH alcaliniza o meio! Em pH neutro ou alcalino, o permanganato reduz-se a MnO2 (precipitado marrom-escuro) e o Fe2+/Fe3+ precipitam como hidróxidos.",
+          "error"
+        );
+      } else if (st.type === "trap_fenol") {
+        if (!state.trapsTriggered.has("fenol")) {
+          state.trapsTriggered.add("fenol");
+          updateRigor(-10);
+        }
+        setDialog(
+          "INDICADOR DESNECESSÁRIO (-10 PTS DE RIGOR)",
+          "Fenolftaleína é um indicador ácido-base! Na permanganometria, o próprio íon MnO4- (violeta intenso) funciona como autoindicador redox.",
+          "error"
+        );
+      } else if (st.type === "trap_hcl") {
+        if (!state.trapsTriggered.has("hcl")) {
+          state.trapsTriggered.add("hcl");
+          updateRigor(-15);
+        }
+        setDialog(
+          "ERRO QUÍMICO (-15 PTS DE RIGOR)",
+          "HCl não deve ser usado sem solução de Zimmermann-Reinhardt! O MnO4- oxida íons Cl- a Cl2(g), consumindo excesso de titulante.",
+          "error"
+        );
+      } else if (st.type === "board_theory") {
+        document.getElementById("modal-board").classList.remove("hidden");
+      } else if (st.type === "station_titration") {
+        if (!state.inventory.amostra || !state.inventory.kmno4 || !state.inventory.h2so4) {
+          setDialog(
+            "BANCADA BLOQUEADA",
+            "Você ainda não coletou todos os 3 itens obrigatórios (Amostra de FeSO4·7H2O, KMnO4 padronizado e H2SO4 diluído).",
+            "error"
+          );
+        } else {
+          openTitrationModal();
+        }
+      } else if (st.type === "station_report") {
+        const doneCount = state.sample.replicatas.filter((r) => r.volRegistrado !== null).length;
+        if (doneCount < 3) {
+          setDialog(
+            "TERMINAL BLOQUEADO",
+            `Conclua e registre as 3 replicatas na Bancada de Titulação antes de gerar o laudo estatístico (${doneCount}/3 concluídas).`,
+            "error"
+          );
+        } else {
+          openReportModal();
+        }
+      }
+    }
+
+    // =========================================================================
+    // CONTROLES DE TECLADO E TOUCH
+    // =========================================================================
+    window.addEventListener("keydown", (e) => {
+      if (
+        !document.getElementById("modal-titration").classList.contains("hidden") ||
+        !document.getElementById("modal-report").classList.contains("hidden") ||
+        !document.getElementById("modal-board").classList.contains("hidden") ||
+        !document.getElementById("screen-intro").classList.contains("hidden")
+      ) {
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+      state.keys[key] = true;
+      if (key === " " || key === "e" || key === "enter") {
+        e.preventDefault();
+        handleInteract();
+      }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      state.keys[e.key.toLowerCase()] = false;
+    });
+
+    document.querySelectorAll(".dpad-btn").forEach((btn) => {
+      const dir = btn.dataset.dir;
+      const keyMap = { up: "arrowup", down: "arrowdown", left: "arrowleft", right: "arrowright" };
+      const k = keyMap[dir];
+      btn.addEventListener("touchstart", (e) => { e.preventDefault(); state.keys[k] = true; });
+      btn.addEventListener("touchend", (e) => { e.preventDefault(); state.keys[k] = false; });
+      btn.addEventListener("mousedown", () => { state.keys[k] = true; });
+      btn.addEventListener("mouseup", () => { state.keys[k] = false; });
+      btn.addEventListener("mouseleave", () => { state.keys[k] = false; });
+    });
+
+    document.getElementById("btn-mobile-action").addEventListener("click", handleInteract);
+    document.getElementById("btn-open-titration").addEventListener("click", openTitrationModal);
+    document.getElementById("btn-open-report").addEventListener("click", openReportModal);
+    document.getElementById("btn-close-board").addEventListener("click", () => {
+      document.getElementById("modal-board").classList.add("hidden");
+    });
+
+    // =========================================================================
+    // RENDERIZAÇÃO DO CENÁRIO PIXEL ART TOP-DOWN
+    // =========================================================================
+    function collidesWithWorld(nx, ny, w, h) {
+      // Paredes externas
+      if (nx < 24 || ny < 56 || nx + w > WORLD_W - 24 || ny + h > WORLD_H - 20) {
+        return true;
+      }
+      // Colisão com móveis/bancadas
+      for (const st of stations) {
+        if (nx < st.x + st.w && nx + w > st.x && ny < st.y + st.h && ny + h > st.y) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function drawLabWorld() {
+      // Piso quadriculado retrô
+      const tileSize = 32;
+      for (let y = 0; y < WORLD_H; y += tileSize) {
+        for (let x = 0; x < WORLD_W; x += tileSize) {
+          const even = ((x / tileSize) + (y / tileSize)) % 2 === 0;
+          labCtx.fillStyle = even ? "#1e293b" : "#172033";
+          labCtx.fillRect(x, y, tileSize, tileSize);
+        }
+      }
+
+      // Parede superior com janelas
+      labCtx.fillStyle = "#334155";
+      labCtx.fillRect(0, 0, WORLD_W, 54);
+      labCtx.fillStyle = "#0f172a";
+      labCtx.fillRect(0, 50, WORLD_W, 4);
+
+      // Janelas de laboratório
+      [90, 310, 530].forEach((wx) => {
+        labCtx.fillStyle = "#0284c7";
+        labCtx.fillRect(wx, 10, 100, 30);
+        labCtx.fillStyle = "#7dd3fc";
+        labCtx.fillRect(wx + 4, 14, 42, 22);
+        labCtx.fillRect(wx + 52, 14, 42, 22);
+      });
+
+      // Moldura das paredes laterais e inferior
+      labCtx.fillStyle = "#334155";
+      labCtx.fillRect(0, 0, 20, WORLD_H);
+      labCtx.fillRect(WORLD_W - 20, 0, 20, WORLD_H);
+      labCtx.fillRect(0, WORLD_H - 16, WORLD_W, 16);
+
+      // Bancadas e Estações
+      const nearby = getNearbyStation();
+      for (const st of stations) {
+        // Sombra
+        labCtx.fillStyle = "rgba(0,0,0,0.45)";
+        labCtx.fillRect(st.x + 4, st.y + 6, st.w, st.h);
+
+        // Tampo da bancada
+        labCtx.fillStyle = "#475569";
+        labCtx.fillRect(st.x, st.y, st.w, st.h);
+        labCtx.fillStyle = "#64748b";
+        labCtx.fillRect(st.x + 3, st.y + 3, st.w - 6, st.h - 10);
+
+        // Destaque se o jogador estiver perto
+        if (nearby && nearby.id === st.id) {
+          labCtx.strokeStyle = "#facc15";
+          labCtx.lineWidth = 3;
+          labCtx.strokeRect(st.x - 2, st.y - 2, st.w + 4, st.h + 4);
+        }
+
+        // Ícones pixelados sobre cada estação
+        const cx = Math.round(st.x + st.w / 2);
+        const cy = Math.round(st.y + st.h / 2);
+        if (st.type === "item_amostra") {
+          // Balança analítica pixelada
+          labCtx.fillStyle = "#e2e8f0";
+          labCtx.fillRect(cx - 14, cy - 8, 28, 18);
+          labCtx.fillStyle = "#0ea5e9";
+          labCtx.fillRect(cx - 10, cy - 5, 20, 9);
+        } else if (st.type.startsWith("item_")) {
+          // Frasco reagente válido
+          labCtx.fillStyle = st.color;
+          labCtx.fillRect(cx - 8, cy - 10, 16, 20);
+          labCtx.fillStyle = "#f8fafc";
+          labCtx.fillRect(cx - 5, cy - 4, 10, 6);
+        } else if (st.type === "trap_naoh") {
+          // Frasco reagente colorido
+          labCtx.fillStyle = st.color;
+          labCtx.fillRect(cx - 8, cy - 10, 16, 20);
+          labCtx.fillStyle = "#ffffff";
+          labCtx.fillRect(cx - 5, cy - 4, 10, 6);
+        } else if (st.type === "board_theory") {
+          // Quadro-negro verde com giz
+          labCtx.fillStyle = "#064e3b";
+          labCtx.fillRect(cx - 34, cy - 15, 68, 28);
+          labCtx.strokeStyle = "#b45309";
+          labCtx.lineWidth = 2;
+          labCtx.strokeRect(cx - 34, cy - 15, 68, 28);
+          labCtx.fillStyle = "#ecfdf5";
+          labCtx.font = "bold 9px monospace";
+          labCtx.textAlign = "center";
+          labCtx.fillText("MnO₄⁻ + 5Fe²⁺", cx, cy + 2);
+        } else if (st.type.startsWith("trap_")) {
+          // Frasco reagente colorido
+          labCtx.fillStyle = st.color;
+          labCtx.fillRect(cx - 8, cy - 10, 16, 20);
+          labCtx.fillStyle = "#ffffff";
+          labCtx.fillRect(cx - 5, cy - 4, 10, 6);
+        } else if (st.type === "station_titration") {
+          // Suporte universal + bureta + erlenmeyer
+          labCtx.fillStyle = "#cbd5e1";
+          labCtx.fillRect(cx - 22, cy - 18, 4, 34);
+          labCtx.fillStyle = "#c084fc";
+          labCtx.fillRect(cx - 10, cy - 16, 6, 20);
+          labCtx.fillStyle = "#38bdf8";
+          labCtx.fillRect(cx - 13, cy + 6, 12, 10);
+        } else if (st.type === "station_report") {
+          // Computador terminal verde
+          labCtx.fillStyle = "#0f172a";
+          labCtx.fillRect(cx - 18, cy - 14, 36, 24);
+          labCtx.fillStyle = "#10b981";
+          labCtx.fillRect(cx - 14, cy - 10, 28, 16);
+        }
+
+        // Etiqueta curta em Unicode limpo
+        labCtx.fillStyle = "#f8fafc";
+        labCtx.font = "bold 10px Inter, sans-serif";
+        labCtx.textAlign = "center";
+        const shortTag =
+          st.id === "balanca" ? "Balança (FeSO₄)" :
+          st.id === "prateleira_kmno4" ? "KMnO₄" :
+          st.id === "prateleira_h2so4" ? "H₂SO₄" :
+          st.id === "armadilha_naoh" ? "NaOH" :
+          st.id === "quadro_teorico" ? "Quadro Redox" :
+          st.id === "armadilha_fenol" ? "Fenolft." :
+          st.id === "armadilha_hcl" ? "HCl" :
+          st.id === "bancada_titulacao" ? "Titulação" : "Laudo";
+        labCtx.fillText(shortTag, cx, st.y + st.h + 12);
+      }
+
+      // Personagem do Jogador
+      drawCharacterSprite(
+        labCtx,
+        state.charClass,
+        state.player.x - 2,
+        state.player.y - 2,
+        2,
+        state.player.frame
+      );
+
+      // Mostra/oculta hint de interação
+      const hintEl = document.getElementById("interact-hint");
+      if (nearby) {
+        hintEl.textContent = `[ESPAÇO / E] ${nearby.label}`;
+        hintEl.classList.remove("hidden");
+      } else {
+        hintEl.classList.add("hidden");
+      }
+    }
+
+    let lastTime = 0;
+    function gameLoop(timestamp) {
+      const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
+      lastTime = timestamp;
+
+      // Atualiza movimento se nenhum modal estiver aberto
+      const modalOpen =
+        !document.getElementById("modal-titration").classList.contains("hidden") ||
+        !document.getElementById("modal-report").classList.contains("hidden") ||
+        !document.getElementById("modal-board").classList.contains("hidden");
+
+      if (!modalOpen) {
+        let vx = 0;
+        let vy = 0;
+        if (state.keys["w"] || state.keys["arrowup"]) vy -= 1;
+        if (state.keys["s"] || state.keys["arrowdown"]) vy += 1;
+        if (state.keys["a"] || state.keys["arrowleft"]) vx -= 1;
+        if (state.keys["d"] || state.keys["arrowright"]) vx += 1;
+
+        if (vx !== 0 || vy !== 0) {
+          const len = Math.hypot(vx, vy);
+          vx /= len;
+          vy /= len;
+
+          const nx = state.player.x + vx * state.player.speed * dt;
+          const ny = state.player.y + vy * state.player.speed * dt;
+
+          if (!collidesWithWorld(nx, state.player.y, state.player.w, state.player.h)) {
+            state.player.x = nx;
+          }
+          if (!collidesWithWorld(state.player.x, ny, state.player.w, state.player.h)) {
+            state.player.y = ny;
+          }
+
+          state.player.animTimer += dt;
+          if (state.player.animTimer > 0.16) {
+            state.player.frame = (state.player.frame + 1) % 2;
+            state.player.animTimer = 0;
+          }
+        } else {
+          state.player.frame = 0;
+        }
+      }
+
+      drawLabWorld();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // =========================================================================
+    // MINIGAME: BANCADA DE TITULAÇÃO EM TRIPLICATA (KMnO4)
+    // =========================================================================
+    function openTitrationModal() {
+      document.getElementById("modal-titration").classList.remove("hidden");
+      selectReplicataTab(state.activeRepIndex);
+    }
+
+    document.getElementById("btn-close-titration").addEventListener("click", () => {
+      document.getElementById("modal-titration").classList.add("hidden");
+    });
+
+    function selectReplicataTab(idx) {
+      state.activeRepIndex = idx;
+      document.querySelectorAll(".rep-tab").forEach((btn, i) => {
+        if (i === idx) {
+          btn.className = "rep-tab retro-btn py-2.5 px-3 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs md:text-sm";
+        } else {
+          const done = state.sample.replicatas[i].volRegistrado !== null;
+          btn.className = `rep-tab retro-btn py-2.5 px-3 rounded-lg ${done ? "bg-emerald-900/70 border-emerald-500 text-emerald-200" : "bg-slate-800 border-slate-600 text-slate-300"} border font-bold text-xs md:text-sm`;
+        }
+      });
+      updateTitrationView();
+    }
+
+    document.querySelectorAll(".rep-tab").forEach((btn) => {
+      btn.addEventListener("click", () => selectReplicataTab(Number(btn.dataset.rep)));
+    });
+
+    function updateTitrationView() {
+      const rep = state.sample.replicatas[state.activeRepIndex];
+      document.getElementById("tit-massa").textContent = `${rep.massa.toFixed(4)} g`;
+      document.getElementById("tit-conc").textContent = `${state.sample.concKMnO4.toFixed(4)} mol/L`;
+      document.getElementById("tit-vol").textContent = `${rep.volAtual.toFixed(2)} mL`;
+
+      const v = rep.volAtual;
+      const pf = rep.volPontoFinal;
+      const badge = document.getElementById("titration-status-badge");
+
+      let liquidColor = "#e2f8f5"; // esverdeado muito pálido (Fe2+ em H2SO4)
+      if (v === 0) {
+        badge.textContent = "Solução de Fe2+ acidificada com H2SO4 (quase incolor).";
+        badge.className = "mt-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-xs text-center text-slate-200 w-full";
+      } else if (v < pf - 0.15) {
+        liquidColor = "#f1f5f9";
+        badge.textContent = "MnO4- sendo reduzido a Mn2+ incolor sob agitação.";
+        badge.className = "mt-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-xs text-center text-slate-200 w-full";
+      } else if (v >= pf - 0.15 && v < pf) {
+        liquidColor = "#fce7f3";
+        badge.textContent = "Próximo ao ponto final! Rastro rosa demora alguns segundos para desaparecer.";
+        badge.className = "mt-2 px-3 py-1.5 rounded-lg bg-pink-950/60 border border-pink-500 text-xs text-center text-pink-200 w-full";
+      } else if (v >= pf && v <= pf + 0.12) {
+        liquidColor = "#f472b6";
+        badge.textContent = "✅ PONTO DE VIRAGEM! Coloração rosa-pálido persistente por 30 s.";
+        badge.className = "mt-2 px-3 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-400 text-xs text-center text-emerald-200 font-bold w-full";
+      } else {
+        liquidColor = "#7e22ce";
+        badge.textContent = "⚠️ Excesso de KMnO4! Solução ficou violeta intenso (passou do ponto).";
+        badge.className = "mt-2 px-3 py-1.5 rounded-lg bg-purple-950/80 border border-purple-400 text-xs text-center text-purple-200 w-full";
+      }
+
+      drawTitrationApparatus(v, liquidColor);
+    }
+
+    function drawTitrationApparatus(volEscoado, erlenmeyerColor) {
+      const c = document.getElementById("titration-canvas");
+      const ctx = c.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+      ctx.clearRect(0, 0, c.width, c.height);
+
+      // Base do suporte universal
+      ctx.fillStyle = "#475569";
+      ctx.fillRect(35, 255, 150, 12);
+      ctx.fillStyle = "#94a3b8";
+      ctx.fillRect(50, 20, 8, 235);
+
+      // Garra da bureta
+      ctx.fillStyle = "#64748b";
+      ctx.fillRect(58, 75, 52, 6);
+
+      // Tubo da bureta (50 mL)
+      ctx.fillStyle = "rgba(226, 232, 240, 0.25)";
+      ctx.fillRect(104, 18, 16, 145);
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(104, 18, 16, 145);
+
+      // Nível de KMnO4 dentro da bureta (desce conforme escoa)
+      const fracRestante = Math.max(0.05, 1 - volEscoado / 50);
+      const fillH = Math.round(138 * fracRestante);
+      ctx.fillStyle = "#7e22ce";
+      ctx.fillRect(106, 22 + (138 - fillH), 12, fillH);
+
+      // Graduações da bureta
+      ctx.fillStyle = "#f8fafc";
+      for (let y = 28; y <= 154; y += 12) {
+        ctx.fillRect(105, y, 5, 1);
+      }
+
+      // Torneira e ponta da bureta
+      ctx.fillStyle = "#38bdf8";
+      ctx.fillRect(98, 166, 28, 6);
+      ctx.fillStyle = "#cbd5e1";
+      ctx.fillRect(110, 172, 4, 14);
+
+      // Erlenmeyer
+      ctx.fillStyle = erlenmeyerColor;
+      ctx.beginPath();
+      ctx.moveTo(96, 215);
+      ctx.lineTo(128, 215);
+      ctx.lineTo(148, 250);
+      ctx.lineTo(76, 250);
+      ctx.closePath();
+      ctx.fill();
+
+      // Contorno do Erlenmeyer
+      ctx.strokeStyle = "#e2e8f0";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(103, 192);
+      ctx.lineTo(121, 192);
+      ctx.lineTo(121, 206);
+      ctx.lineTo(149, 251);
+      ctx.lineTo(75, 251);
+      ctx.lineTo(103, 206);
+      ctx.closePath();
+      ctx.stroke();
+    }
+
+    document.querySelectorAll(".btn-drip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const add = Number(btn.dataset.add);
+        const rep = state.sample.replicatas[state.activeRepIndex];
+        rep.volAtual = Number(Math.min(50.0, rep.volAtual + add).toFixed(2));
+        updateTitrationView();
+      });
+    });
+
+    document.getElementById("btn-reset-rep").addEventListener("click", () => {
+      const rep = state.sample.replicatas[state.activeRepIndex];
+      rep.volAtual = 0.0;
+      updateTitrationView();
+    });
+
+    document.getElementById("btn-record-rep").addEventListener("click", () => {
+      const rep = state.sample.replicatas[state.activeRepIndex];
+      if (rep.volAtual <= 0) {
+        return;
+      }
+      rep.volRegistrado = rep.volAtual;
+      document.getElementById(`r${rep.id}-v`).textContent = `${rep.volRegistrado.toFixed(2)} mL`;
+      document.getElementById(`r${rep.id}-v`).className = "py-1.5 text-emerald-300 font-bold";
+
+      const doneCount = state.sample.replicatas.filter((r) => r.volRegistrado !== null).length;
+      document.getElementById("hud-replicatas").textContent = `${doneCount} / 3`;
+
+      if (doneCount === 3) {
+        document.getElementById("btn-open-report").disabled = false;
+        setDialog(
+          "TRIPLICATA CONCLUÍDA!",
+          "Você registrou os volumes das 3 replicatas! Caminhe até o Terminal de Laudo (verde) ou clique em 'Terminal Laudo' para calcular a estatística.",
+          "success"
+        );
+      }
+
+      // Avança automaticamente para a próxima replicata pendente
+      const nextIdx = state.sample.replicatas.findIndex((r) => r.volRegistrado === null);
+      if (nextIdx !== -1) {
+        selectReplicataTab(nextIdx);
+      } else {
+        selectReplicataTab(state.activeRepIndex);
+      }
+    });
+
+    // =========================================================================
+    // TERMINAL DE LAUDO ESTATÍSTICO & VALIDAÇÃO
+    // =========================================================================
+    function openReportModal() {
+      const s = state.sample;
+      document.getElementById("rep-summary-conc").textContent = `${s.concKMnO4.toFixed(4)} mol/L`;
+      s.replicatas.forEach((r) => {
+        document.getElementById(`rep-m${r.id}`).textContent = `${r.massa.toFixed(4)} g`;
+        document.getElementById(`rep-v${r.id}`).textContent = `${r.volRegistrado.toFixed(2)} mL`;
+      });
+      document.getElementById("modal-report").classList.remove("hidden");
+    }
+
+    document.getElementById("btn-close-report").addEventListener("click", () => {
+      document.getElementById("modal-report").classList.add("hidden");
+    });
+
+    function computeExpectedStats() {
+      const s = state.sample;
+      const teores = s.replicatas.map((r) => {
+        const molsMnO4 = s.concKMnO4 * (r.volRegistrado / 1000.0);
+        const molsFe = molsMnO4 * 5.0;
+        const massaSal = molsFe * MM_FESO4_7H2O;
+        return (massaSal / r.massa) * 100.0;
+      });
+
+      const media = teores.reduce((acc, val) => acc + val, 0) / 3.0;
+      const variancia =
+        teores.reduce((acc, val) => acc + Math.pow(val - media, 2), 0) / 2.0; // n - 1 = 2
+      const dp = Math.sqrt(variancia);
+      const dpr = media > 0 ? (dp / media) * 100.0 : 0;
+      const margemIC = (T_CRITICO_95_GL2 * dp) / Math.sqrt(3.0);
+
+      return {
+        teores,
+        media,
+        dp,
+        dpr,
+        margemIC
+      };
+    }
+
+    document.getElementById("form-laudo").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const t1 = Number(document.getElementById("calc-t1").value);
+      const t2 = Number(document.getElementById("calc-t2").value);
+      const t3 = Number(document.getElementById("calc-t3").value);
+      const mediaAluno = Number(document.getElementById("calc-media").value);
+      const dpAluno = Number(document.getElementById("calc-dp").value);
+      const dprAluno = Number(document.getElementById("calc-dpr").value);
+      const icInfAluno = Number(document.getElementById("calc-ic-inf").value);
+      const icSupAluno = Number(document.getElementById("calc-ic-sup").value);
+      const parecer = document.getElementById("calc-parecer").value.trim();
+
+      const fb = document.getElementById("report-feedback");
+      if (parecer.length < 20) {
+        fb.textContent = "Redija um parecer técnico mais detalhado (mínimo de 20 caracteres) antes de emitir o laudo.";
+        fb.className = "p-3 rounded-lg bg-red-950 border border-red-500 text-red-200 text-xs";
+        fb.classList.remove("hidden");
+        return;
+      }
+
+      if (icInfAluno >= icSupAluno) {
+        fb.textContent = "O Limite Inferior do IC 95% deve ser menor que o Limite Superior.";
+        fb.className = "p-3 rounded-lg bg-red-950 border border-red-500 text-red-200 text-xs";
+        fb.classList.remove("hidden");
+        return;
+      }
+
+      const expected = computeExpectedStats();
+      const s = state.sample;
+      const expectedInf = expected.media - expected.margemIC;
+      const expectedSup = expected.media + expected.margemIC;
+
+      // Calcula pontuação de precisão dos cálculos do estudante
+      let calcScore = 100;
+      if (Math.abs(t1 - expected.teores[0]) > 0.35) calcScore -= 10;
+      if (Math.abs(t2 - expected.teores[1]) > 0.35) calcScore -= 10;
+      if (Math.abs(t3 - expected.teores[2]) > 0.35) calcScore -= 10;
+      if (Math.abs(mediaAluno - expected.media) > 0.35) calcScore -= 15;
+      if (Math.abs(dpAluno - expected.dp) > 0.08) calcScore -= 15;
+      if (Math.abs(dprAluno - expected.dpr) > 0.15) calcScore -= 10;
+      if (Math.abs(icInfAluno - expectedInf) > 0.25) calcScore -= 8;
+      if (Math.abs(icSupAluno - expectedSup) > 0.25) calcScore -= 7;
+      calcScore = Math.max(0, calcScore);
+
+      const notaFinal = Math.round(state.rigor * 0.4 + calcScore * 0.6);
+      const timestamp = new Date().toLocaleString("pt-BR");
+
+      state.lastRecord = {
+        Data_Hora: timestamp,
+        Matricula: s.cleanId,
+        Nome: state.playerName,
+        Classe: state.charClass,
+        Teor_Real_Lote: s.teorReal.toFixed(2),
+        Conc_KMnO4: s.concKMnO4.toFixed(4),
+        R1_Massa_g: s.replicatas[0].massa.toFixed(4),
+        R1_Vol_mL: s.replicatas[0].volRegistrado.toFixed(2),
+        R2_Massa_g: s.replicatas[1].massa.toFixed(4),
+        R2_Vol_mL: s.replicatas[1].volRegistrado.toFixed(2),
+        R3_Massa_g: s.replicatas[2].massa.toFixed(4),
+        R3_Vol_mL: s.replicatas[2].volRegistrado.toFixed(2),
+        Teores_Aluno: `${t1.toFixed(2)}% | ${t2.toFixed(2)}% | ${t3.toFixed(2)}%`,
+        Media_Aluno: mediaAluno.toFixed(2),
+        Media_Esperada: expected.media.toFixed(2),
+        DP_Aluno: dpAluno.toFixed(3),
+        DP_Esperado: expected.dp.toFixed(3),
+        DPR_Aluno: dprAluno.toFixed(2),
+        IC95_Aluno: `[${icInfAluno.toFixed(2)}% ; ${icSupAluno.toFixed(2)}%]`,
+        IC95_Esperado: `[${expectedInf.toFixed(2)}% ; ${expectedSup.toFixed(2)}%]`,
+        Rigor_Bancada: state.rigor,
+        Precisao_Calculos: calcScore,
+        Nota_Sugerida: notaFinal,
+        Parecer: parecer
+      };
+
+      // Envio opcional para Google Forms se habilitado
+      let formsMsg = "Comprovante CSV gerado e pronto para download.";
+      if (GOOGLE_FORMS_CONFIG.enabled) {
+        try {
+          const formData = new URLSearchParams();
+          formData.append(GOOGLE_FORMS_CONFIG.entryMatricula, state.lastRecord.Matricula);
+          formData.append(GOOGLE_FORMS_CONFIG.entryNome, state.lastRecord.Nome);
+          formData.append(
+            GOOGLE_FORMS_CONFIG.entryResumo,
+            `Real:${s.teorReal}% | MediaAluno:${mediaAluno}% (Esp:${expected.media.toFixed(2)}%) | ` +
+            `s:${dpAluno} (Esp:${expected.dp.toFixed(3)}) | IC95:[${icInfAluno}%;${icSupAluno}%] | Nota:${notaFinal}/100`
+          );
+          formData.append(GOOGLE_FORMS_CONFIG.entryParecer, parecer);
+
+          await fetch(GOOGLE_FORMS_CONFIG.formUrl, {
+            method: "POST",
+            mode: "no-cors",
+            body: formData
+          });
+          formsMsg = "Dados enviados ao servidor do professor e comprovante CSV liberado!";
+        } catch (err) {
+          formsMsg = "Laudo emitido localmente! Baixe o comprovante CSV abaixo.";
+        }
+      }
+
+      fb.textContent = `✅ ${formsMsg}`;
+      fb.className = "p-3 rounded-lg bg-emerald-950 border border-emerald-500 text-emerald-200 text-xs";
+      fb.classList.remove("hidden");
+
+      // Renderiza Certificado Oficial em HTML semântico limpo
+      document.getElementById("cert-date").textContent = timestamp;
+      document.getElementById("cert-body").innerHTML = `
+        <div><strong>Analista:</strong> ${state.playerName} (Matrícula: <code>${s.cleanId}</code>)</div>
+        <div><strong>Amostra:</strong> Sulfato Ferroso Heptaidratado (FeSO<sub>4</sub>&middot;7H<sub>2</sub>O) — Permanganometria</div>
+        <div><strong>Média Reportada:</strong> <strong>${mediaAluno.toFixed(2)}% (m/m)</strong> &nbsp;|&nbsp; <strong>IC 95% (<i>n</i> = 3):</strong> <strong>[${icInfAluno.toFixed(2)}% ; ${icSupAluno.toFixed(2)}%]</strong></div>
+        <div><strong>Desvio Padrão / DPR Reportados:</strong> <i>s</i> = ${dpAluno.toFixed(3)}% &nbsp;|&nbsp; DPR = ${dprAluno.toFixed(2)}%</div>
+        <div class="pt-2 border-t border-slate-700 flex flex-wrap gap-4 text-xs">
+          <span>Rigor Experimental: <strong class="text-emerald-400">${state.rigor}/100</strong></span>
+          <span>Exatidão dos Cálculos: <strong class="text-cyan-400">${calcScore}/100</strong></span>
+          <span>Índice Geral: <strong class="text-amber-400">${notaFinal}/100</strong></span>
+        </div>
+      `;
+      document.getElementById("certificate-panel").classList.remove("hidden");
+    });
+
+    // Download CSV oficial
+    document.getElementById("btn-download-csv").addEventListener("click", () => {
+      if (!state.lastRecord) return;
+      const headers = Object.keys(state.lastRecord).join(";");
+      const values = Object.values(state.lastRecord)
+        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+        .join(";");
+      const csvContent = "\uFEFF" + headers + "\n" + values;
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `laudo_permanganometria_${state.lastRecord.Matricula}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("btn-print-cert").addEventListener("click", () => {
+      window.print();
+    });
+  </script>
+</body>
+</html>
