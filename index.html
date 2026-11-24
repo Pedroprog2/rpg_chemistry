@@ -1615,6 +1615,19 @@
         R3_Massa_g: s.replicatas[2].massa.toFixed(4),
         R3_Vol_mL: s.replicatas[2].volRegistrado.toFixed(2),
         Teores_Aluno: `${t1.toFixed(2)}% | ${t2.toFixed(2)}% | ${t3.toFixed(2)}%`,
+        Media_Aluno: mediaAluno.toFixed(2),
+        DP_Aluno: dpAluno.toFixed(3),
+        DPR_Aluno: dprAluno.toFixed(2),
+        IC95_Aluno: `[${icInfAluno.toFixed(2)}%; ${icSupAluno.toFixed(2)}%]`,
+        Media_Esperada: expected.media.toFixed(2),
+        DP_Esperado: expected.dp.toFixed(3),
+        IC95_Esperado: `[${expectedInf.toFixed(2)}%; ${expectedSup.toFixed(2)}%]`,
+        Rigor_Bancada: state.rigor,
+        Exatidao_Calculos: calcScore,
+        Nota_Sugerida: notaFinal,
+        Parecer: parecer
+      };
+
       // Envio para Google Forms com os 5 campos mapeados
       let formsMsg = "Comprovante CSV gerado e pronto para download.";
       if (GOOGLE_FORMS_CONFIG.enabled) {
