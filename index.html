@@ -606,17 +606,16 @@
 
   <script>
     // =========================================================================
-    // CONFIGURAÇÃO OPCIONAL DO GOOGLE FORMS (MESMA ESTRUTURA GRATUITA)
+    // CONFIGURAÇÃO DO GOOGLE FORMS (INTEGRADA COM SUA PLANILHA)
     // =========================================================================
-    // Caso queira envio automático para sua planilha no Google Drive, preencha
-    // a URL pública terminada em /formResponse e os códigos entry abaixo:
     const GOOGLE_FORMS_CONFIG = {
-      enabled: true, // mude para true após inserir sua URL e entries
+      enabled: true,
       formUrl: "https://docs.google.com/forms/d/e/1FAIpQLSfQXfMBbYnNKXLXbIdz_F2baScGs8AZ8OkntZSl8DS1TnPSrw/formResponse",
-      entryMatricula: "entry.1100499664",
-      entryNome: "entry.901326228",
-      entryResumo: "entry.1594357227,
-      entryParecer: "entry.823625954"
+      entryNome: "entry.1845306876",
+      entryMatricula: "entry.901326228",
+      entryGabarito: "entry.1100499664",
+      entryResultado: "entry.1594357227",
+      entryDiscussao: "entry.823625954"
     };
 
     // =========================================================================
@@ -1616,39 +1615,40 @@
         R3_Massa_g: s.replicatas[2].massa.toFixed(4),
         R3_Vol_mL: s.replicatas[2].volRegistrado.toFixed(2),
         Teores_Aluno: `${t1.toFixed(2)}% | ${t2.toFixed(2)}% | ${t3.toFixed(2)}%`,
-        Media_Aluno: mediaAluno.toFixed(2),
-        Media_Esperada: expected.media.toFixed(2),
-        DP_Aluno: dpAluno.toFixed(3),
-        DP_Esperado: expected.dp.toFixed(3),
-        DPR_Aluno: dprAluno.toFixed(2),
-        IC95_Aluno: `[${icInfAluno.toFixed(2)}% ; ${icSupAluno.toFixed(2)}%]`,
-        IC95_Esperado: `[${expectedInf.toFixed(2)}% ; ${expectedSup.toFixed(2)}%]`,
-        Rigor_Bancada: state.rigor,
-        Precisao_Calculos: calcScore,
-        Nota_Sugerida: notaFinal,
-        Parecer: parecer
-      };
-
-      // Envio opcional para Google Forms se habilitado
+      // Envio para Google Forms com os 5 campos mapeados
       let formsMsg = "Comprovante CSV gerado e pronto para download.";
       if (GOOGLE_FORMS_CONFIG.enabled) {
         try {
-          const formData = new URLSearchParams();
-          formData.append(GOOGLE_FORMS_CONFIG.entryMatricula, state.lastRecord.Matricula);
+          const gabaritoTexto =
+            `Teor_Real_Lote: ${s.teorReal.toFixed(2)}% | ` +
+            `[KMnO4]: ${s.concKMnO4.toFixed(4)} M | ` +
+            `Massas(g): ${s.replicatas.map((r) => r.massa.toFixed(4)).join("; ")} | ` +
+            `Vols_Escoados(mL): ${s.replicatas.map((r) => r.volRegistrado.toFixed(2)).join("; ")} | ` +
+            `Teores_Esp(%): ${expected.teores.map((t) => t.toFixed(2)).join("; ")} | ` +
+            `Media_Esp: ${expected.media.toFixed(2)}% | s_Esp: ${expected.dp.toFixed(3)}% | ` +
+            `DPR_Esp: ${expected.dpr.toFixed(2)}% | IC95_Esp: [${expectedInf.toFixed(2)}%; ${expectedSup.toFixed(2)}%]`;
+
+          const resultadoAlunoTexto =
+            `Classe: ${state.charClass} | ` +
+            `Teores_Aluno(%): ${t1.toFixed(2)}; ${t2.toFixed(2)}; ${t3.toFixed(2)} | ` +
+            `Media_Aluno: ${mediaAluno.toFixed(2)}% | s_Aluno: ${dpAluno.toFixed(3)}% | ` +
+            `DPR_Aluno: ${dprAluno.toFixed(2)}% | IC95_Aluno: [${icInfAluno.toFixed(2)}%; ${icSupAluno.toFixed(2)}%] | ` +
+            `Rigor: ${state.rigor}/100 | Calc: ${calcScore}/100 | Nota: ${notaFinal}/100`;
+
+          const formData = new FormData();
           formData.append(GOOGLE_FORMS_CONFIG.entryNome, state.lastRecord.Nome);
-          formData.append(
-            GOOGLE_FORMS_CONFIG.entryResumo,
-            `Real:${s.teorReal}% | MediaAluno:${mediaAluno}% (Esp:${expected.media.toFixed(2)}%) | ` +
-            `s:${dpAluno} (Esp:${expected.dp.toFixed(3)}) | IC95:[${icInfAluno}%;${icSupAluno}%] | Nota:${notaFinal}/100`
-          );
-          formData.append(GOOGLE_FORMS_CONFIG.entryParecer, parecer);
+          formData.append(GOOGLE_FORMS_CONFIG.entryMatricula, state.lastRecord.Matricula);
+          formData.append(GOOGLE_FORMS_CONFIG.entryGabarito, gabaritoTexto);
+          formData.append(GOOGLE_FORMS_CONFIG.entryResultado, resultadoAlunoTexto);
+          formData.append(GOOGLE_FORMS_CONFIG.entryDiscussao, parecer);
 
           await fetch(GOOGLE_FORMS_CONFIG.formUrl, {
             method: "POST",
             mode: "no-cors",
+            keepalive: true,
             body: formData
           });
-          formsMsg = "Dados enviados ao servidor do professor e comprovante CSV liberado!";
+          formsMsg = "Dados enviados à planilha do professor e comprovante CSV liberado!";
         } catch (err) {
           formsMsg = "Laudo emitido localmente! Baixe o comprovante CSV abaixo.";
         }
